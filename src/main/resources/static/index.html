@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111827;
+            --muted: #94a3b8;
+            --primary: #2563eb;
+            --primary-600: #1d4ed8;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+            --card: #0b1220;
+            --border: #1f2937;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+                Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+            background: linear-gradient(135deg, #0b1220, #0f172a 60%);
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        }
+        .title { font-size: 20px; font-weight: 700; letter-spacing: 0.3px; }
+        .nav { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            background: var(--card);
+            color: #e5e7eb;
+            border: 1px solid var(--border);
+            padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;
+            transition: all .15s ease-in-out;
+        }
+        .btn:hover { transform: translateY(-1px); border-color: #2a364a; }
+        .btn.primary { background: var(--primary); border-color: var(--primary); }
+        .btn.primary:hover { background: var(--primary-600); }
+        .btn.success { background: var(--success); border-color: var(--success); }
+        .btn.warning { background: var(--warning); border-color: var(--warning); color: #0b1220; }
+        .btn.danger { background: var(--danger); border-color: var(--danger); }
+
+        .panel { margin-top: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+        .panel .section { padding: 16px; border-bottom: 1px solid var(--border); }
+        .panel .section:last-child { border-bottom: 0; }
+
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .input, .select, .textarea {
+            background: var(--card); color: #e5e7eb; border: 1px solid var(--border);
+            padding: 10px 12px; border-radius: 10px; outline: none; font-size: 14px; width: 100%;
+        }
+        .textarea { resize: vertical; min-height: 72px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+        .card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+            display: flex; flex-direction: column; gap: 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+        }
+        .card h4 { margin: 0; font-size: 16px; }
+        .muted { color: var(--muted); font-size: 13px; }
+        .row { display: flex; gap: 10px; }
+        .grow { flex: 1; }
+        .pill { font-size: 12px; padding: 4px 8px; border-radius: 999px; font-weight: 700; border: 1px solid var(--border); }
+        .pill.avail { background: rgba(22,163,74,0.15); color: #22c55e; border-color: rgba(22,163,74,0.35); }
+        .pill.borrow { background: rgba(245,158,11,0.15); color: #f59e0b; border-color: rgba(245,158,11,0.35); }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .empty { text-align: center; color: var(--muted); padding: 28px 10px; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+        .divider { height: 1px; background: var(--border); margin: 8px 0; }
+        @media (max-width: 640px) { .header { gap: 8px; flex-direction: column; align-items: stretch; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="title">📚 Library</div>
+        <div class="nav">
+            <button class="btn" onclick="loadAll()">All Books</button>
+            <button class="btn" onclick="loadAvailable()">Available Books</button>
+            <button class="btn" onclick="loadBorrowed()">Borrowed Books</button>
+            <button class="btn" onclick="toggleSection('search-sec')">Search</button>
+            <button id="addBookBtn" class="btn primary" onclick="toggleSection('add-sec')" style="display:none">Add Book</button>
+            <button class="btn" onclick="testAuth()" style="background: var(--warning); color: #0b1220;">Test Auth</button>
+            <div id="authSection" style="display:none">
+                <span id="userInfo" class="muted" style="margin-right: 10px;"></span>
+                <button class="btn" onclick="logout()">Logout</button>
+            </div>
+            <div id="loginSection">
+                <button class="btn primary" onclick="window.location.href='/login'">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div id="search-sec" class="section" style="display:none">
+            <div class="toolbar form-grid">
+                <div class="row grow"><input id="qTitle" class="input grow" placeholder="Title contains..." /></div>
+                <div class="row grow"><input id="qAuthor" class="input grow" placeholder="Author contains..." /></div>
+                <div><button class="btn" onclick="searchBooks()">Search</button></div>
+            </div>
+        </div>
+
+        <div id="add-sec" class="section" style="display:none">
+            <div class="form-grid">
+                <div class="row grow"><input id="tTitle" class="input grow" placeholder="Title *" /></div>
+                <div class="row grow"><input id="tAuthor" class="input grow" placeholder="Author *" /></div>
+                <div class="row grow"><input id="tYear" type="number" class="input grow" placeholder="Year" /></div>
+                <div class="row grow"><textarea id="tDesc" class="textarea grow" placeholder="Description"></textarea></div>
+                <div><button class="btn success" onclick="addBook()">Add</button></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div id="info" class="muted" style="margin-bottom:8px;">Loading...</div>
+            <div id="grid" class="grid"></div>
+            <div id="empty" class="empty" style="display:none">No books found</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const info = document.getElementById('info');
+    const addBookBtn = document.getElementById('addBookBtn');
+    const authSection = document.getElementById('authSection');
+    const userInfo = document.getElementById('userInfo');
+    const loginSection = document.getElementById('loginSection');
+
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function setInfo(text) { info.textContent = text; }
+
+    function renderBooks(books) {
+        grid.innerHTML = '';
+        if (!books || books.length === 0) {
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+        const html = books.map(b => `
+            <div class="card">
+                <div class="row" style="justify-content: space-between; align-items: center;">
+                    <h4>${escapeHtml(b.title)}</h4>
+                    <span class="pill ${b.status === 'AVAILABLE' ? 'avail' : 'borrow'}">${b.status}</span>
+                </div>
+                <div class="muted">by ${escapeHtml(b.author)}</div>
+                ${b.description ? `<div class="muted">${escapeHtml(b.description)}</div>` : ''}
+                <div class="row" style="justify-content: space-between; align-items: center;">
+                    <div class="muted">${b.yearPublished ? 'Year: ' + b.yearPublished : ''}</div>
+                    ${b.borrower ? `<div class="muted">Borrower: ${escapeHtml(b.borrower)}</div>` : ''}
+                </div>
+                <div class="divider"></div>
+                <div class="actions">
+                    ${b.status === 'AVAILABLE'
+                        ? `<button class="btn warning" onclick="borrow(${b.id})">Borrow</button>`
+                        : `<button class="btn success" onclick="returnBook(${b.id})">Return</button>`}
+                    <button id="deleteBtn-${b.id}" class="btn danger" onclick="removeBook(${b.id})" style="display:none">Delete</button>
+                </div>
+            </div>
+        `).join('');
+        grid.innerHTML = html;
+        
+        
+        checkAuth();
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+    }
+
+    async function loadAll() {
+        setInfo('All Books');
+        const res = await fetch('/api/books');
+        renderBooks(await res.json());
+    }
+    async function loadAvailable() {
+        setInfo('Available Books');
+        const res = await fetch('/api/books/status/available');
+        renderBooks(await res.json());
+    }
+    async function loadBorrowed() {
+        setInfo('Borrowed Books');
+        const res = await fetch('/api/books/status/borrowed');
+        renderBooks(await res.json());
+    }
+
+    async function searchBooks() {
+        const t = document.getElementById('qTitle').value.trim();
+        const a = document.getElementById('qAuthor').value.trim();
+        if (!t && !a) { setInfo('Enter title or author to search'); return; }
+        const params = new URLSearchParams();
+        if (t) params.append('title', t);
+        if (a) params.append('author', a);
+        let url = '/api/books/search?'+params.toString();
+        const res = await fetch(url);
+        renderBooks(await res.json());
+        setInfo('Search Results');
+    }
+
+    async function addBook() {
+        const title = document.getElementById('tTitle').value.trim();
+        const author = document.getElementById('tAuthor').value.trim();
+        const year = document.getElementById('tYear').value;
+        const desc = document.getElementById('tDesc').value.trim();
+        if (!title || !author) { setInfo('Title and Author are required'); return; }
+        const res = await fetch('/api/books', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, author, yearPublished: year ? parseInt(year) : null, description: desc || null })
+        });
+        if (res.ok) {
+            setInfo('Book added');
+            document.getElementById('tTitle').value = '';
+            document.getElementById('tAuthor').value = '';
+            document.getElementById('tYear').value = '';
+            document.getElementById('tDesc').value = '';
+            loadAll();
+        } else {
+            setInfo('Failed to add book');
+        }
+    }
+
+    async function borrow(id) {
+        const borrower = prompt('Enter borrower name');
+        if (!borrower) return;
+        const res = await fetch(`/api/books/${id}/borrow?borrower=${encodeURIComponent(borrower)}`, { method: 'POST' });
+        if (res.ok) { setInfo('Borrowed'); loadAll(); } else { setInfo('Borrow failed'); }
+    }
+
+    async function returnBook(id) {
+        const res = await fetch(`/api/books/${id}/return`, { method: 'POST' });
+        if (res.ok) { setInfo('Returned'); loadAll(); } else { setInfo('Return failed'); }
+    }
+
+    async function removeBook(id) {
+        if (!confirm('Delete this book?')) return;
+        const res = await fetch(`/api/books/${id}`, { method: 'DELETE' });
+        if (res.ok) { setInfo('Deleted'); loadAll(); } else { setInfo('Delete failed'); }
+    }
+
+    async function logout() {
+        try {
+            const res = await fetch('/api/logout', { method: 'POST' });
+            if (res.ok) {
+               
+                userInfo.textContent = '';
+                addBookBtn.style.display = 'none';
+                authSection.style.display = 'none';
+                loginSection.style.display = 'inline-block';
+                
+             
+                document.querySelectorAll('[id^="deleteBtn-"]').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                
+            
+                window.location.reload();
+            } else {
+                alert('Logout failed');
+            }
+        } catch (e) {
+            console.error('Logout error:', e);
+            alert('Logout failed');
+        }
+    }
+
+    async function checkAuth() {
+        try {
+            console.log('Checking authentication...');
+            const res = await fetch('/api/user');
+            console.log('Auth response status:', res.status);
+            
+            if (res.ok) {
+                const user = await res.json();
+                console.log('User data:', user);
+                
+                if (user.authenticated) {
+                    userInfo.textContent = `Welcome, ${user.username}!`;
+                    addBookBtn.style.display = 'inline-block';
+                    authSection.style.display = 'flex';
+                    loginSection.style.display = 'none';
+                    
+                  
+                    const isAdmin = user.authorities && user.authorities.some(auth => 
+                        auth.authority === 'ROLE_ADMIN'
+                    );
+                    console.log('Is admin:', isAdmin);
+                    
+                    if (isAdmin) {
+                      
+                        document.querySelectorAll('[id^="deleteBtn-"]').forEach(btn => {
+                            btn.style.display = 'inline-block';
+                        });
+                    }
+                } else {
+                    console.log('User not authenticated');
+                    authSection.style.display = 'none';
+                    loginSection.style.display = 'inline-block';
+                    addBookBtn.style.display = 'none';
+                }
+            } else {
+                console.log('Auth response not ok:', res.status, res.statusText);
+                authSection.style.display = 'none';
+                loginSection.style.display = 'inline-block';
+                addBookBtn.style.display = 'none';
+            }
+        } catch (e) {
+            console.error('Error checking auth:', e);
+            authSection.style.display = 'none';
+            loginSection.style.display = 'inline-block';
+            addBookBtn.style.display = 'none';
+        }
+    }
+
+    async function testAuth() {
+        try {
+            const res = await fetch('/api/test-auth');
+            const data = await res.json();
+            alert(`Test Auth Response:\nStatus: ${res.status}\nData: ${JSON.stringify(data, null, 2)}`);
+        } catch (e) {
+            alert(`Test Auth Error: ${e.message}`);
+        }
+    }
+
+    loadAll();
+    checkAuth();
+</script>
+</body>
+</html>
