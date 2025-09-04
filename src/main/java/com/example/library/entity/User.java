@@ -10,6 +10,8 @@ import lombok.Setter;
 @Setter
 public class User {
 
+
+    //field attributes
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
